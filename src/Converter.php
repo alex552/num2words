@@ -3,20 +3,8 @@
 
 namespace Alex552\Num2words;
 
-
 class Converter
 {
-    var $pounds;
-    var $pence;
-    var $major;
-    var $minor;
-    var $words = '';
-    var $number;
-    var $magind;
-    var $units = array('', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine');
-    var $teens = array('ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen');
-    var $tens = array('', 'ten', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety');
-    var $mag = array('', 'thousand', 'million', 'billion', 'trillion');
     public static $_instance;
 
     public static function getInstance()
@@ -27,49 +15,49 @@ class Converter
         return self::$_instance;
     }
 
-    public function baa2words($number)
+    public function converter($num)
     {
-        $this->number = number_format($number, 2);
-        list($this->pounds, $this->pence) = explode('.', $this->number);
-        $this->words = " $this->major $this->pence$this->minor";
-        if ($this->pounds == 0)
-            $this->words = "Zero $this->words";
-        else {
-            $groups = explode(',', $this->pounds);
-            $groups = array_reverse($groups);
-            for ($this->magind = 0; $this->magind < count($groups); $this->magind++) {
-                if (($this->magind == 1) && (strpos($this->words, 'hundred') === false) && ($groups[0] != '000'))
-                    $this->words = ' and ' . $this->words;
-                $this->words = $this->_build($groups[$this->magind]) . $this->words;
+        {
+            $num = str_replace(array(',', ' '), '' , trim($num));
+            if(! $num) {
+                return false;
             }
+            $num = (int) $num;
+            $words = array();
+            $list1 = array('', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven',
+                'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'
+            );
+            $list2 = array('', 'ten', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety', 'hundred');
+            $list3 = array('', 'thousand', 'million', 'billion', 'trillion', 'quadrillion', 'quintillion', 'sextillion', 'septillion',
+                'octillion', 'nonillion', 'decillion', 'undecillion', 'duodecillion', 'tredecillion', 'quattuordecillion',
+                'quindecillion', 'sexdecillion', 'septendecillion', 'octodecillion', 'novemdecillion', 'vigintillion'
+            );
+            $num_length = strlen($num);
+            $levels = (int) (($num_length + 2) / 3);
+            $max_length = $levels * 3;
+            $num = substr('00' . $num, -$max_length);
+            $num_levels = str_split($num, 3);
+            for ($i = 0; $i < count($num_levels); $i++) {
+                $levels--;
+                $hundreds = (int) ($num_levels[$i] / 100);
+                $hundreds = ($hundreds ? ' ' . $list1[$hundreds] . ' hundred' . ' ' : '');
+                $tens = (int) ($num_levels[$i] % 100);
+                $singles = '';
+                if ( $tens < 20 ) {
+                    $tens = ($tens ? ' ' . $list1[$tens] . ' ' : '' );
+                } else {
+                    $tens = (int)($tens / 10);
+                    $tens = ' ' . $list2[$tens] . ' ';
+                    $singles = (int) ($num_levels[$i] % 10);
+                    $singles = ' ' . $list1[$singles] . ' ';
+                }
+                $words[] = $hundreds . $tens . $singles . ( ( $levels && ( int ) ( $num_levels[$i] ) ) ? ' ' . $list3[$levels] . ' ' : '' );
+            } //end for loop
+            $commas = count($words);
+            if ($commas > 1) {
+                $commas = $commas - 1;
+            }
+            return trim(implode(' ', $words));
         }
-        return $this->words;
-    }
-
-    protected function _build($n)
-    {
-        $res = '';
-        $na = str_pad("$n", 3, "0", STR_PAD_LEFT);
-        if ($na == '000') return '';
-        if ($na{0} != 0)
-            $res = ' ' . $this->units[$na{0}] . ' hundred';
-        if (($na{1} == '0') && ($na{2} == '0'))
-            return $res . ' ' . $this->mag[$this->magind];
-        $res .= $res == '' ? '' : ' and';
-        $t = (int)$na{1};
-        $u = (int)$na{2};
-        switch ($t) {
-            case 0:
-                $res .= ' ' . $this->units[$u];
-                break;
-            case 1:
-                $res .= ' ' . $this->teens[$u];
-                break;
-            default:
-                $res .= ' ' . $this->tens[$t] . ' ' . $this->units[$u];
-                break;
-        }
-        $res .= ' ' . $this->mag[$this->magind];
-        return $res;
     }
 }

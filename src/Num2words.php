@@ -8,6 +8,6 @@ class Num2words
 {
     public static function convert($number)
     {
-        return Converter::getInstance()->baa2words(1);
+        return Converter::getInstance()->converter($number);
     }
 }
